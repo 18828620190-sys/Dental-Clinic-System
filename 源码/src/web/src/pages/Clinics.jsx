@@ -1,0 +1,18 @@
+import React, { useEffect, useState } from 'react';
+import { Building2, MapPin, Pencil, Plus, Phone } from 'lucide-react';
+import { api } from '../lib/api.js';
+import { useApp } from '../components/AppContext.jsx';
+import { Badge, Button, Card, Empty, ErrorState, Field, FormGrid, Loading, Modal, PageHeader } from '../components/ui.jsx';
+
+const empty={clinicNo:'',postalAddress:'',managerName:'',phone:'',email:'',officeAreaSqm:'',status:'ACTIVE'};
+export default function Clinics(){
+  const {user,notify}=useApp(); const [items,setItems]=useState([]); const [loading,setLoading]=useState(true); const [error,setError]=useState(null); const [open,setOpen]=useState(false); const [form,setForm]=useState(empty); const [editing,setEditing]=useState(null);
+  const isHQ=user.role==='HQ_MANAGER';
+  const load=()=>{setLoading(true);api('/clinics').then(d=>setItems(d.items)).catch(setError).finally(()=>setLoading(false))}; useEffect(load,[]);
+  const show=(c)=>{setEditing(c?.clinic_id||null);setForm(c?{clinicNo:c.clinic_no,postalAddress:c.postal_address,managerName:c.manager_name,phone:c.phone,email:c.email||'',officeAreaSqm:c.office_area_sqm,status:c.status}:empty);setOpen(true)};
+  const save=async()=>{try{if(editing)await api('/clinics/'+editing,{method:'PUT',body:form});else await api('/clinics',{method:'POST',body:form});notify(editing?'诊所信息已更新':'诊所已创建');setOpen(false);load()}catch(e){notify(e.message,'error')}};
+  return <div><PageHeader eyebrow="UC004 · CLINIC MASTER" title="诊所信息" description="总部统一维护地址、主管、联系方式和办公面积；各诊所共享一致编号。" actions={isHQ&&<Button onClick={()=>show(null)}><Plus size={16}/>新增诊所</Button>}/>
+  {loading?<Loading/>:error?<ErrorState error={error} onRetry={load}/>:!items.length?<Card><Empty title="暂无诊所"/></Card>:<div className="clinic-grid">{items.map(c=><Card key={c.clinic_id} className="clinic-card"><div className="clinic-top"><div className="clinic-mark"><Building2 size={22}/></div><div><Badge value={c.status}/><h2>{c.clinic_no}</h2></div></div><div className="clinic-lines"><span><MapPin size={15}/>{c.postal_address}</span><span><Phone size={15}/>{c.phone}</span><span>主管：{c.manager_name} · {c.office_area_sqm} ㎡</span></div><div className="clinic-stats"><div><strong>{c.appointment_count}</strong><span>累计预约</span></div><div><strong>{c.published_schedule_count}</strong><span>已发布排班</span></div></div>{isHQ&&<Button size="sm" variant="ghost" onClick={()=>show(c)}><Pencil size={14}/>编辑信息</Button>}</Card>)}</div>}
+  {open&&<Modal title={editing?'编辑诊所':'新增诊所'} onClose={()=>setOpen(false)} footer={<><Button variant="ghost" onClick={()=>setOpen(false)}>取消</Button><Button onClick={save}>保存</Button></>}><FormGrid columns={2}><Field label="诊所编号"><input value={form.clinicNo} onChange={e=>setForm({...form,clinicNo:e.target.value})} placeholder="留空自动生成"/></Field><Field label="主管姓名" required><input value={form.managerName} onChange={e=>setForm({...form,managerName:e.target.value})}/></Field><Field label="邮政地址" required className="span-2"><input value={form.postalAddress} onChange={e=>setForm({...form,postalAddress:e.target.value})}/></Field><Field label="联系电话" required><input value={form.phone} onChange={e=>setForm({...form,phone:e.target.value})}/></Field><Field label="电子邮箱"><input type="email" value={form.email} onChange={e=>setForm({...form,email:e.target.value})}/></Field><Field label="办公面积（㎡）" required><input type="number" step="0.01" value={form.officeAreaSqm} onChange={e=>setForm({...form,officeAreaSqm:e.target.value})}/></Field><Field label="状态"><select value={form.status} onChange={e=>setForm({...form,status:e.target.value})}><option value="ACTIVE">有效</option><option value="INACTIVE">停用</option></select></Field></FormGrid></Modal>}
+  </div>;
+}
