@@ -6,7 +6,7 @@
 
 ```text
 报告/
-  ADC牙科连锁诊所管理系统_分析与设计报告_最终版.pdf
+  ADC牙科连锁诊所管理系统_分析与设计报告.pdf
 源码/
   src/server/        Express 后端
   src/web/           React 管理端
@@ -157,7 +157,7 @@ npm run test:ui
 最终报告位于：
 
 ```text
-报告/ADC牙科连锁诊所管理系统_分析与设计报告_最终版.pdf
+报告/ADC牙科连锁诊所管理系统_分析与设计报告.pdf
 ```
 
 ## 八、常见问题
